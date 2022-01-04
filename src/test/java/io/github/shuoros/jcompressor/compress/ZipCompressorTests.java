@@ -2,7 +2,7 @@ package io.github.shuoros.jcompressor.compress;
 
 import io.github.shuoros.jcompressor.JCompressor;
 import io.github.shuoros.jcompressor.exception.NoFileToExtractException;
-import io.github.shuoros.jcompressor.exception.NoFileToZipException;
+import io.github.shuoros.jcompressor.exception.NoFileToCompressException;
 import org.junit.jupiter.api.*;
 
 import java.io.File;
@@ -39,7 +39,7 @@ public class ZipCompressorTests {
         ZipCompressor zipCompressor = new ZipCompressor();
 
         // Then
-        assertThrows(NoFileToZipException.class, zipCompressor::compress);
+        assertThrows(NoFileToCompressException.class, zipCompressor::compress);
     }
 
     @Test
