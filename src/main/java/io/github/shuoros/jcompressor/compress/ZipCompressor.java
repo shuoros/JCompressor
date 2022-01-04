@@ -16,7 +16,7 @@ import java.util.zip.ZipOutputStream;
 
 public class ZipCompressor implements JCompressor {
 
-    private List<File> files;
+    private final List<File> files;
 
     public ZipCompressor() {
         this((List<File>) null);
@@ -36,10 +36,15 @@ public class ZipCompressor implements JCompressor {
         compress(this.files);
     }
 
-    @Override
     public void compress(List<File> files) {
+        compress(files, getZipFileDestinationFile(files.get(0)));
+    }
+
+    @Override
+    public void compress(List<File> files, File destinationFile) {
         final Path sourceDir = getSourceDirDestinationPath(files.get(0));
-        final String zipFileName = getZipFileDestinationPath(files.get(0)).toString().concat(".zip");
+        final String zipFileName = (destinationFile.getName().endsWith(".zip")) ?//
+                destinationFile.getPath() : destinationFile.getPath().concat(".zip");
         try {
             createATempFolderToCompressFilesFrom(sourceDir, files);
             compressFileInZip(sourceDir, zipFileName);
@@ -49,28 +54,28 @@ public class ZipCompressor implements JCompressor {
     }
 
     public void extractToFolder() {
-        if(this.files == null)
+        if (this.files == null)
             throw new NoFileToExtractException();
-        extract(this.files.get(0), getZipFileDestinationPath(this.files.get(0)).toFile());
+        extract(this.files.get(0), getZipFileDestinationFile(this.files.get(0)));
     }
 
     public void extractToHere() {
-        if(this.files == null)
+        if (this.files == null)
             throw new NoFileToExtractException();
-        extract(this.files.get(0), getZipFileDestinationPath(this.files.get(0)).toFile().getParentFile());
+        extract(this.files.get(0), getZipFileDestinationFile(this.files.get(0)).getParentFile());
     }
 
     public void extract(File destinationFile) {
-        if(this.files == null)
+        if (this.files == null)
             throw new NoFileToExtractException();
         extract(this.files.get(0), destinationFile);
     }
 
     @Override
-    public void extract(File zipFile, File destinationFile) {
+    public void extract(File compressedFile, File destinationFile) {
         byte[] buffer = new byte[1024];
         try {
-            ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile));
+            ZipInputStream zis = new ZipInputStream(new FileInputStream(compressedFile));
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
                 zipEntry = extractZipEntryAndReturnNextEntry(destinationFile, buffer, zis, zipEntry);
@@ -154,13 +159,13 @@ public class ZipCompressor implements JCompressor {
     }
 
     private Path getSourceDirDestinationPath(File file) {
-        return getZipFileDestinationPath(file).getParent().resolve(//
-                "tmp".concat(getZipFileDestinationPath(file).getFileName().toString()));
+        return getZipFileDestinationFile(file).toPath().getParent().resolve(//
+                "tmp".concat(getZipFileDestinationFile(file).toPath().getFileName().toString()));
     }
 
-    private Path getZipFileDestinationPath(File file) {
+    private File getZipFileDestinationFile(File file) {
         return file.getParentFile().toPath().resolve(//
-                Paths.get(file.getName().replaceFirst("[.][^.]+$", "")));
+                Paths.get(file.getName().replaceFirst("[.][^.]+$", ""))).toFile();
     }
 
     private void createATempFolderToCompressFilesFrom(Path sourceDir, List<File> files) throws IOException {

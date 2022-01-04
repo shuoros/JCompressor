@@ -11,8 +11,8 @@ import java.util.List;
  */
 public interface JCompressor {
 
-    void compress(List<File> files);
+    void compress(List<File> files, File destinationFile);
 
-    void extract(File zipFile, File destinationFile);
+    void extract(File compressedFile, File destinationFile);
 
 }

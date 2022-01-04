@@ -10,7 +10,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ZipCompressorTests {
@@ -44,11 +45,14 @@ public class ZipCompressorTests {
     @Test
     @Order(2)
     public void whenCompressAFileItMustBeCompressed() {
+        // Given
+        File zipFile = new File(resources.concat("/JCompressorTest.zip"));
+
         // When
-        jCompressor.compress(List.of(file));
+        jCompressor.compress(List.of(file), zipFile);
 
         // Then
-        assertTrue(new File(resources.concat("/JCompressorTest.zip")).exists());
+        assertTrue(zipFile.exists());
 
         // After
         file.delete();
