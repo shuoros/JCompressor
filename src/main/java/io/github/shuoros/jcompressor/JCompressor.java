@@ -5,9 +5,9 @@ import java.util.List;
 
 public interface JCompressor {
 
-    void setFile(List<File> files);
+    void setFiles(List<File> files);
 
-    List<File> getFile();
+    List<File> getFiles();
 
     void compress(List<File> files);
 
