@@ -6,6 +6,6 @@ public interface JCompressor {
 
     void compress(File file);
 
-    void extract(File file);
+    void extract(File zipFile, File destinationFile);
 
 }

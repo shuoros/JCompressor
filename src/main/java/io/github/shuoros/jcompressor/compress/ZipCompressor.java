@@ -4,11 +4,13 @@ import io.github.shuoros.jcompressor.JCompressor;
 import io.github.shuoros.jcompressor.exception.NoFileToZipException;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class ZipCompressor implements JCompressor {
@@ -41,8 +43,61 @@ public class ZipCompressor implements JCompressor {
     }
 
     @Override
-    public void extract(File file) {
+    public void extract(File zipFile, File destinationFile) {
+        byte[] buffer = new byte[1024];
+        try {
+            ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile));
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                zipEntry = extractZipEntryAndReturnNextEntry(destinationFile, buffer, zis, zipEntry);
+            }
+            zis.closeEntry();
+            zis.close();
+        }  catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
+    private ZipEntry extractZipEntryAndReturnNextEntry(File destinationFile, byte[] buffer, ZipInputStream zis, ZipEntry zipEntry) throws IOException {
+        File newFile = extractFileFromZip(destinationFile, zipEntry);
+        if (zipEntry.isDirectory()) {
+            if (!newFile.isDirectory() && !newFile.mkdirs()) {
+                throw new IOException("Failed to create directory " + newFile);
+            }
+        } else {
+            checkForWindowsCreatedArchives(newFile);
+            writeInFileOutPutStream(buffer, zis, newFile);
+        }
+        return zis.getNextEntry();
+    }
+
+    private File extractFileFromZip(File destinationDir, ZipEntry zipEntry) throws IOException {
+        File destFile = new File(destinationDir, zipEntry.getName());
+
+        String destDirPath = destinationDir.getCanonicalPath();
+        String destFilePath = destFile.getCanonicalPath();
+
+        if (!destFilePath.startsWith(destDirPath + File.separator)) {
+            throw new IOException("Entry is outside of the target dir: " + zipEntry.getName());
+        }
+
+        return destFile;
+    }
+
+    private void checkForWindowsCreatedArchives(File newFile) throws IOException {
+        File parent = newFile.getParentFile();
+        if (!parent.isDirectory() && !parent.mkdirs()) {
+            throw new IOException("Failed to create directory " + parent);
+        }
+    }
+
+    private void writeInFileOutPutStream(byte[] buffer, ZipInputStream zis, File newFile) throws IOException {
+        FileOutputStream fos = new FileOutputStream(newFile);
+        int len;
+        while ((len = zis.read(buffer)) > 0) {
+            fos.write(buffer, 0, len);
+        }
+        fos.close();
     }
 
     private void compressFileInZip(Path sourceDir, String zipFileName) throws IOException {
