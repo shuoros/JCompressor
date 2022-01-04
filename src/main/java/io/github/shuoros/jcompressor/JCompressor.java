@@ -1,6 +1,7 @@
 package io.github.shuoros.jcompressor;
 
 import java.io.File;
+import java.util.List;
 
 public interface JCompressor {
 
@@ -8,7 +9,7 @@ public interface JCompressor {
 
     File getFile();
 
-    void compress(File file);
+    void compress(List<File> files);
 
     void extract(File zipFile, File destinationFile);
 
