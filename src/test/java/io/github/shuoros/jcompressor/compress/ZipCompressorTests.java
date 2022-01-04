@@ -33,22 +33,6 @@ public class ZipCompressorTests {
 
     @Test
     @Order(1)
-    public void emptyConstructorMustSetNullToFileParameter() {
-        assertNull(jCompressor.getFiles());
-    }
-
-    @Test
-    @Order(2)
-    public void whenPassAFileInConstructorItMustSetToFileParameter() {
-        // When
-        jCompressor = new ZipCompressor(file);
-
-        // Then
-        assertEquals(List.of(file), jCompressor.getFiles());
-    }
-
-    @Test
-    @Order(3)
     public void whenZipCompressorHasNoFileSetsTheCompressMethodMustThrowNoFileToZipException() {
         // When
         ZipCompressor zipCompressor = new ZipCompressor();
@@ -58,7 +42,7 @@ public class ZipCompressorTests {
     }
 
     @Test
-    @Order(4)
+    @Order(2)
     public void whenCompressAFileItMustBeCompressed() {
         // When
         jCompressor.compress(List.of(file));
@@ -71,7 +55,7 @@ public class ZipCompressorTests {
     }
 
     @Test
-    @Order(5)
+    @Order(3)
     public void whenZipCompressorHasNoFileSetsTheExtractMethodMustThrowNoFileToExtractException() {
         // When
         ZipCompressor zipCompressor = new ZipCompressor();
@@ -81,7 +65,7 @@ public class ZipCompressorTests {
     }
 
     @Test
-    @Order(6)
+    @Order(4)
     public void whenExtractAZipFileItMustBeExtracted() {
         // Given
         File zipFile = new File(resources.concat("/JCompressorTest.zip"));

@@ -30,24 +30,6 @@ public class ZipCompressor implements JCompressor {
         this.files = files;
     }
 
-    @Override
-    public void setFiles(List<File> files) {
-        this.files = files;
-    }
-
-    public void addFile(File file) {
-        this.files.add(file);
-    }
-
-    @Override
-    public List<File> getFiles() {
-        return this.files;
-    }
-
-    public File getFile(int index) {
-        return this.files.get(index);
-    }
-
     public void compress() {
         if (this.files == null)
             throw new NoFileToZipException();
