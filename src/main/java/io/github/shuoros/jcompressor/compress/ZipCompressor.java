@@ -42,6 +42,10 @@ public class ZipCompressor implements JCompressor {
         }
     }
 
+    public void extract(File destinationFile) {
+        extract(this.file, destinationFile);
+    }
+
     @Override
     public void extract(File zipFile, File destinationFile) {
         byte[] buffer = new byte[1024];
