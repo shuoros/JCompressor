@@ -15,30 +15,34 @@ import java.util.zip.ZipOutputStream;
 
 public class ZipCompressor implements JCompressor {
 
-    private File file;
+    private List<File> files;
 
     public ZipCompressor() {
-        this(null);
+        this((List<File>) null);
     }
 
     public ZipCompressor(File file) {
-        this.file = file;
+        this(List.of(file));
+    }
+
+    public ZipCompressor(List<File> files) {
+        this.files = files;
     }
 
     @Override
-    public void setFile(File file) {
-        this.file = file;
+    public void setFile(List<File> files) {
+        this.files = files;
     }
 
     @Override
-    public File getFile() {
-        return this.file;
+    public List<File> getFile() {
+        return this.files;
     }
 
     public void compress() {
-        if (this.file == null)
+        if (this.files == null)
             throw new NoFileToZipException();
-        compress(List.of(this.file));
+        compress(this.files);
     }
 
     @Override
@@ -121,7 +125,7 @@ public class ZipCompressor implements JCompressor {
     }
 
     public void extract(File destinationFile) {
-        extract(this.file, destinationFile);
+        extract(this.files.get(0), destinationFile);
     }
 
     @Override
