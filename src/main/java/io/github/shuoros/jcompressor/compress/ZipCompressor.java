@@ -1,6 +1,7 @@
 package io.github.shuoros.jcompressor.compress;
 
 import io.github.shuoros.jcompressor.JCompressor;
+import io.github.shuoros.jcompressor.exception.NoFileToExtractException;
 import io.github.shuoros.jcompressor.exception.NoFileToZipException;
 
 import java.io.*;
@@ -65,7 +66,21 @@ public class ZipCompressor implements JCompressor {
         }
     }
 
+    public void extractToFolder() {
+        if(this.files == null)
+            throw new NoFileToExtractException();
+        extract(this.files.get(0), getZipFileDestinationPath(this.files.get(0)).toFile());
+    }
+
+    public void extractToHere() {
+        if(this.files == null)
+            throw new NoFileToExtractException();
+        extract(this.files.get(0), getZipFileDestinationPath(this.files.get(0)).toFile().getParentFile());
+    }
+
     public void extract(File destinationFile) {
+        if(this.files == null)
+            throw new NoFileToExtractException();
         extract(this.files.get(0), destinationFile);
     }
 
