@@ -2,7 +2,7 @@ package io.github.shuoros.jcompressor.compress;
 
 import io.github.shuoros.jcompressor.JCompressor;
 import io.github.shuoros.jcompressor.exception.NoFileToExtractException;
-import io.github.shuoros.jcompressor.exception.NoFileToZipException;
+import io.github.shuoros.jcompressor.exception.NoFileToCompressException;
 import org.junit.jupiter.api.*;
 
 import java.io.File;
@@ -10,7 +10,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ZipCompressorTests {
@@ -33,45 +34,32 @@ public class ZipCompressorTests {
 
     @Test
     @Order(1)
-    public void emptyConstructorMustSetNullToFileParameter() {
-        assertNull(jCompressor.getFiles());
-    }
-
-    @Test
-    @Order(2)
-    public void whenPassAFileInConstructorItMustSetToFileParameter() {
-        // When
-        jCompressor = new ZipCompressor(file);
-
-        // Then
-        assertEquals(List.of(file), jCompressor.getFiles());
-    }
-
-    @Test
-    @Order(3)
     public void whenZipCompressorHasNoFileSetsTheCompressMethodMustThrowNoFileToZipException() {
         // When
         ZipCompressor zipCompressor = new ZipCompressor();
 
         // Then
-        assertThrows(NoFileToZipException.class, zipCompressor::compress);
+        assertThrows(NoFileToCompressException.class, zipCompressor::compress);
     }
 
     @Test
-    @Order(4)
+    @Order(2)
     public void whenCompressAFileItMustBeCompressed() {
+        // Given
+        File zipFile = new File(resources.concat("/JCompressorTest.zip"));
+
         // When
-        jCompressor.compress(List.of(file));
+        jCompressor.compress(List.of(file), zipFile);
 
         // Then
-        assertTrue(new File(resources.concat("/JCompressorTest.zip")).exists());
+        assertTrue(zipFile.exists());
 
         // After
         file.delete();
     }
 
     @Test
-    @Order(5)
+    @Order(3)
     public void whenZipCompressorHasNoFileSetsTheExtractMethodMustThrowNoFileToExtractException() {
         // When
         ZipCompressor zipCompressor = new ZipCompressor();
@@ -81,7 +69,7 @@ public class ZipCompressorTests {
     }
 
     @Test
-    @Order(6)
+    @Order(4)
     public void whenExtractAZipFileItMustBeExtracted() {
         // Given
         File zipFile = new File(resources.concat("/JCompressorTest.zip"));

@@ -1,8 +1,8 @@
 package io.github.shuoros.jcompressor.compress;
 
 import io.github.shuoros.jcompressor.JCompressor;
+import io.github.shuoros.jcompressor.exception.NoFileToCompressException;
 import io.github.shuoros.jcompressor.exception.NoFileToExtractException;
-import io.github.shuoros.jcompressor.exception.NoFileToZipException;
 
 import java.io.*;
 import java.nio.file.*;
@@ -14,50 +14,89 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+/**
+ * This class is an implementation of the {@link io.github.shuoros.jcompressor.JCompressor} class and
+ * specially implements methods for compressing and extracting zip files.
+ *
+ * @author Soroush Shemshadi
+ * @version 0.1.0
+ * @see io.github.shuoros.jcompressor.JCompressor
+ * @since 0.1.0
+ */
 public class ZipCompressor implements JCompressor {
 
-    private List<File> files;
+    private final List<File> files;
 
+    /**
+     * Constructs a new instance of ZipCompressor with no inner files.
+     */
     public ZipCompressor() {
         this((List<File>) null);
     }
 
+    /**
+     * Constructs a new instance of ZipCompressor with your given file to extract or compress.
+     *
+     * @param file A {@link java.io.File} to extract or compress.
+     */
     public ZipCompressor(File file) {
         this(List.of(file));
     }
 
+    /**
+     * Constructs a new instance of ZipCompressor with your given files.
+     *
+     * @param files List of your {@link java.io.File}s to compress or file to extract.
+     */
     public ZipCompressor(List<File> files) {
         this.files = files;
     }
 
-    @Override
-    public void setFiles(List<File> files) {
-        this.files = files;
-    }
-
-    public void addFile(File file) {
-        this.files.add(file);
-    }
-
-    @Override
-    public List<File> getFiles() {
-        return this.files;
-    }
-
-    public File getFile(int index) {
-        return this.files.get(index);
-    }
-
+    /**
+     * Compresses the inner file of instance in same directory and same name(+.zip).
+     * If you construct your instance with no inner file in it this method will
+     * throw a {@link io.github.shuoros.jcompressor.exception.NoFileToCompressException}.
+     */
     public void compress() {
         if (this.files == null)
-            throw new NoFileToZipException();
+            throw new NoFileToCompressException();
         compress(this.files);
     }
 
-    @Override
+    /**
+     * Compresses the inner file of instance in your given destination.
+     * If you construct your instance with no inner file in it this method will
+     * throw a {@link io.github.shuoros.jcompressor.exception.NoFileToCompressException}.
+     *
+     * @param destinationFile Destination where you want your compressed file to be saved.
+     */
+    public void compress(File destinationFile) {
+        if (this.files == null)
+            throw new NoFileToCompressException();
+        compress(this.files, destinationFile);
+    }
+
+    /**
+     * Compresses your given list of files in same directory and same name of 0th
+     * file in list.
+     *
+     * @param files A list of {@link java.io.File}s that you want to compress.
+     */
     public void compress(List<File> files) {
+        compress(files, getZipFileDestinationFile(files.get(0)));
+    }
+
+    /**
+     * Compresses your given list of files in your given location.
+     *
+     * @param files           A list of {@link java.io.File}s that you want to compress.
+     * @param destinationFile Destination where you want your compressed file to be saved.
+     */
+    @Override
+    public void compress(List<File> files, File destinationFile) {
         final Path sourceDir = getSourceDirDestinationPath(files.get(0));
-        final String zipFileName = getZipFileDestinationPath(files.get(0)).toString().concat(".zip");
+        final String zipFileName = (destinationFile.getName().endsWith(".zip")) ?//
+                destinationFile.getPath() : destinationFile.getPath().concat(".zip");
         try {
             createATempFolderToCompressFilesFrom(sourceDir, files);
             compressFileInZip(sourceDir, zipFileName);
@@ -66,29 +105,70 @@ public class ZipCompressor implements JCompressor {
         }
     }
 
+    /**
+     * Extracts inner file of instance in a new folder with name of the inner file.
+     * If you construct your instance with no inner file in it this method will
+     * throw a {@link io.github.shuoros.jcompressor.exception.NoFileToExtractException}.
+     */
     public void extractToFolder() {
-        if(this.files == null)
+        if (this.files == null)
             throw new NoFileToExtractException();
-        extract(this.files.get(0), getZipFileDestinationPath(this.files.get(0)).toFile());
+        extract(this.files.get(0), getZipFileDestinationFile(this.files.get(0)));
     }
 
+    /**
+     * Extracts your given compress file in a new folder with name of the given file.
+     *
+     * @param compressedFile A Compressed which file you want to extract the contents of it.
+     */
+    public void extractToFolder(File compressedFile) {
+        extract(compressedFile, getZipFileDestinationFile(this.files.get(0)));
+    }
+
+    /**
+     * Extracts inner file of instance in same folder of the inner file.
+     * If you construct your instance with no inner file in it this method will
+     * throw a {@link io.github.shuoros.jcompressor.exception.NoFileToExtractException}.
+     */
     public void extractToHere() {
-        if(this.files == null)
+        if (this.files == null)
             throw new NoFileToExtractException();
-        extract(this.files.get(0), getZipFileDestinationPath(this.files.get(0)).toFile().getParentFile());
+        extract(this.files.get(0), getZipFileDestinationFile(this.files.get(0)).getParentFile());
     }
 
+    /**
+     * Extracts your given compress file in same folder of the given file.
+     *
+     * @param compressedFile A Compressed which file you want to extract the contents of it.
+     */
+    public void extractToHere(File compressedFile) {
+        extract(compressedFile, getZipFileDestinationFile(this.files.get(0)).getParentFile());
+    }
+
+    /**
+     * Extracts inner file of instance in your given destination.
+     * If you construct your instance with no inner file in it this method will
+     * throw a {@link io.github.shuoros.jcompressor.exception.NoFileToExtractException}.
+     *
+     * @param destinationFile Destination where your compress file will be extracted in.
+     */
     public void extract(File destinationFile) {
-        if(this.files == null)
+        if (this.files == null)
             throw new NoFileToExtractException();
         extract(this.files.get(0), destinationFile);
     }
 
+    /**
+     * Extracts your given compressed file in your given destination.
+     *
+     * @param compressedFile  A Compressed which file you want to extract the contents of it.
+     * @param destinationFile Destination where your compress file will be extracted in.
+     */
     @Override
-    public void extract(File zipFile, File destinationFile) {
+    public void extract(File compressedFile, File destinationFile) {
         byte[] buffer = new byte[1024];
         try {
-            ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile));
+            ZipInputStream zis = new ZipInputStream(new FileInputStream(compressedFile));
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
                 zipEntry = extractZipEntryAndReturnNextEntry(destinationFile, buffer, zis, zipEntry);
@@ -172,13 +252,13 @@ public class ZipCompressor implements JCompressor {
     }
 
     private Path getSourceDirDestinationPath(File file) {
-        return getZipFileDestinationPath(file).getParent().resolve(//
-                "tmp".concat(getZipFileDestinationPath(file).getFileName().toString()));
+        return getZipFileDestinationFile(file).toPath().getParent().resolve(//
+                "tmp".concat(getZipFileDestinationFile(file).toPath().getFileName().toString()));
     }
 
-    private Path getZipFileDestinationPath(File file) {
+    private File getZipFileDestinationFile(File file) {
         return file.getParentFile().toPath().resolve(//
-                Paths.get(file.getName().replaceFirst("[.][^.]+$", "")));
+                Paths.get(file.getName().replaceFirst("[.][^.]+$", ""))).toFile();
     }
 
     private void createATempFolderToCompressFilesFrom(Path sourceDir, List<File> files) throws IOException {
