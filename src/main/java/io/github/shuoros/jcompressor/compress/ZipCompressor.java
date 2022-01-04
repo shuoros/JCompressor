@@ -15,13 +15,17 @@ import java.util.zip.ZipOutputStream;
 
 public class ZipCompressor implements JCompressor {
 
-    private final File file;
+    private File file;
 
-    public ZipCompressor(){
+    public ZipCompressor() {
         this(null);
     }
 
-    public ZipCompressor(File file){
+    public ZipCompressor(File file) {
+        this.file = file;
+    }
+
+    public void setFile(File file) {
         this.file = file;
     }
 
@@ -57,7 +61,7 @@ public class ZipCompressor implements JCompressor {
             }
             zis.closeEntry();
             zis.close();
-        }  catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
