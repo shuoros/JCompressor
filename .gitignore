@@ -1,4 +1,4 @@
-src/main/java/io/github/shuoros/jfiler/Main.java
+src/main/java/io/github/shuoros/jcompressor/Main.java
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
