@@ -25,8 +25,14 @@ public class ZipCompressor implements JCompressor {
         this.file = file;
     }
 
+    @Override
     public void setFile(File file) {
         this.file = file;
+    }
+
+    @Override
+    public File getFile(){
+        return this.file;
     }
 
     public void compress() {
