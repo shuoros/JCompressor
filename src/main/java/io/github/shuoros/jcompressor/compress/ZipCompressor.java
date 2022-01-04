@@ -1,8 +1,8 @@
 package io.github.shuoros.jcompressor.compress;
 
 import io.github.shuoros.jcompressor.JCompressor;
+import io.github.shuoros.jcompressor.exception.NoFileToCompressException;
 import io.github.shuoros.jcompressor.exception.NoFileToExtractException;
-import io.github.shuoros.jcompressor.exception.NoFileToZipException;
 
 import java.io.*;
 import java.nio.file.*;
@@ -14,32 +14,84 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+/**
+ * This class is an implementation of the {@link io.github.shuoros.jcompressor.JCompressor} class and
+ * specially implements methods for compressing and extracting zip files.
+ *
+ * @author Soroush Shemshadi
+ * @version 0.1.0
+ * @see io.github.shuoros.jcompressor.JCompressor
+ * @since 0.1.0
+ */
 public class ZipCompressor implements JCompressor {
 
     private final List<File> files;
 
+    /**
+     * Constructs a new instance of ZipCompressor with no inner files.
+     */
     public ZipCompressor() {
         this((List<File>) null);
     }
 
+    /**
+     * Constructs a new instance of ZipCompressor with your given file to extract or compress.
+     *
+     * @param file A {@link java.io.File} to extract or compress.
+     */
     public ZipCompressor(File file) {
         this(List.of(file));
     }
 
+    /**
+     * Constructs a new instance of ZipCompressor with your given files.
+     *
+     * @param files List of your {@link java.io.File}s to compress or file to extract.
+     */
     public ZipCompressor(List<File> files) {
         this.files = files;
     }
 
+    /**
+     * Compresses the inner file of instance in same directory and same name(+.zip).
+     * If you construct your instance with no inner file in it this method will
+     * throw a {@link io.github.shuoros.jcompressor.exception.NoFileToCompressException}.
+     */
     public void compress() {
         if (this.files == null)
-            throw new NoFileToZipException();
+            throw new NoFileToCompressException();
         compress(this.files);
     }
 
+    /**
+     * Compresses the inner file of instance in your given destination.
+     * If you construct your instance with no inner file in it this method will
+     * throw a {@link io.github.shuoros.jcompressor.exception.NoFileToCompressException}.
+     *
+     * @param destinationFile Destination where you want your compressed file to be saved.
+     */
+    public void compress(File destinationFile) {
+        if (this.files == null)
+            throw new NoFileToCompressException();
+        compress(this.files, destinationFile);
+    }
+
+    /**
+     * Compresses your given list of files in same directory and same name of 0th
+     * file in list.
+     *
+     * @param files A list of {@link java.io.File}s that you want to compress.
+     */
     public void compress(List<File> files) {
         compress(files, getZipFileDestinationFile(files.get(0)));
     }
 
+    /**
+     * Compresses your given list of files in your given location.
+     *
+     * @param files           A list of {@link java.io.File}s that you want to compress.
+     * @param destinationFile Destination where you want your compressed file to be saved.
+     */
     @Override
     public void compress(List<File> files, File destinationFile) {
         final Path sourceDir = getSourceDirDestinationPath(files.get(0));
@@ -53,24 +105,65 @@ public class ZipCompressor implements JCompressor {
         }
     }
 
+    /**
+     * Extracts inner file of instance in a new folder with name of the inner file.
+     * If you construct your instance with no inner file in it this method will
+     * throw a {@link io.github.shuoros.jcompressor.exception.NoFileToExtractException}.
+     */
     public void extractToFolder() {
         if (this.files == null)
             throw new NoFileToExtractException();
         extract(this.files.get(0), getZipFileDestinationFile(this.files.get(0)));
     }
 
+    /**
+     * Extracts your given compress file in a new folder with name of the given file.
+     *
+     * @param compressedFile A Compressed which file you want to extract the contents of it.
+     */
+    public void extractToFolder(File compressedFile) {
+        extract(compressedFile, getZipFileDestinationFile(this.files.get(0)));
+    }
+
+    /**
+     * Extracts inner file of instance in same folder of the inner file.
+     * If you construct your instance with no inner file in it this method will
+     * throw a {@link io.github.shuoros.jcompressor.exception.NoFileToExtractException}.
+     */
     public void extractToHere() {
         if (this.files == null)
             throw new NoFileToExtractException();
         extract(this.files.get(0), getZipFileDestinationFile(this.files.get(0)).getParentFile());
     }
 
+    /**
+     * Extracts your given compress file in same folder of the given file.
+     *
+     * @param compressedFile A Compressed which file you want to extract the contents of it.
+     */
+    public void extractToHere(File compressedFile) {
+        extract(compressedFile, getZipFileDestinationFile(this.files.get(0)).getParentFile());
+    }
+
+    /**
+     * Extracts inner file of instance in your given destination.
+     * If you construct your instance with no inner file in it this method will
+     * throw a {@link io.github.shuoros.jcompressor.exception.NoFileToExtractException}.
+     *
+     * @param destinationFile Destination where your compress file will be extracted in.
+     */
     public void extract(File destinationFile) {
         if (this.files == null)
             throw new NoFileToExtractException();
         extract(this.files.get(0), destinationFile);
     }
 
+    /**
+     * Extracts your given compressed file in your given destination.
+     *
+     * @param compressedFile  A Compressed which file you want to extract the contents of it.
+     * @param destinationFile Destination where your compress file will be extracted in.
+     */
     @Override
     public void extract(File compressedFile, File destinationFile) {
         byte[] buffer = new byte[1024];
