@@ -83,7 +83,7 @@ public class ZipCompressor implements JCompressor {
      * @param files A list of {@link java.io.File}s that you want to compress.
      */
     public void compress(List<File> files) {
-        compress(files, getZipFileDestinationFile(files.get(0)));
+        compress(files, Utils.getZipFileDestinationFile(files.get(0)));
     }
 
     /**
@@ -94,11 +94,11 @@ public class ZipCompressor implements JCompressor {
      */
     @Override
     public void compress(List<File> files, File destinationFile) {
-        final Path sourceDir = getSourceDirDestinationPath(files.get(0));
+        final Path sourceDir = Utils.getSourceDirDestinationPath(files.get(0));
         final String zipFileName = (destinationFile.getName().endsWith(".zip")) ?//
                 destinationFile.getPath() : destinationFile.getPath().concat(".zip");
         try {
-            createATempFolderToCompressFilesFrom(sourceDir, files);
+            Utils.createATempFolderToCompressFilesFrom(sourceDir, files);
             compressFileInZip(sourceDir, zipFileName);
         } catch (IOException e) {
             e.printStackTrace();
@@ -113,7 +113,7 @@ public class ZipCompressor implements JCompressor {
     public void extractToFolder() {
         if (this.files == null)
             throw new NoFileToExtractException();
-        extract(this.files.get(0), getZipFileDestinationFile(this.files.get(0)));
+        extract(this.files.get(0), Utils.getZipFileDestinationFile(this.files.get(0)));
     }
 
     /**
@@ -122,7 +122,7 @@ public class ZipCompressor implements JCompressor {
      * @param compressedFile A Compressed which file you want to extract the contents of it.
      */
     public void extractToFolder(File compressedFile) {
-        extract(compressedFile, getZipFileDestinationFile(this.files.get(0)));
+        extract(compressedFile, Utils.getZipFileDestinationFile(this.files.get(0)));
     }
 
     /**
@@ -133,7 +133,7 @@ public class ZipCompressor implements JCompressor {
     public void extractToHere() {
         if (this.files == null)
             throw new NoFileToExtractException();
-        extract(this.files.get(0), getZipFileDestinationFile(this.files.get(0)).getParentFile());
+        extract(this.files.get(0), Utils.getZipFileDestinationFile(this.files.get(0)).getParentFile());
     }
 
     /**
@@ -142,7 +142,7 @@ public class ZipCompressor implements JCompressor {
      * @param compressedFile A Compressed which file you want to extract the contents of it.
      */
     public void extractToHere(File compressedFile) {
-        extract(compressedFile, getZipFileDestinationFile(this.files.get(0)).getParentFile());
+        extract(compressedFile, Utils.getZipFileDestinationFile(this.files.get(0)).getParentFile());
     }
 
     /**
@@ -232,7 +232,7 @@ public class ZipCompressor implements JCompressor {
             }
         });
         outputStream.close();
-        delete(sourceDir);
+        Utils.delete(sourceDir);
     }
 
     private void writeFileInOutPutStream(Path file, Path sourceDir, ZipOutputStream outputStream) {
@@ -251,71 +251,75 @@ public class ZipCompressor implements JCompressor {
         outputStream.closeEntry();
     }
 
-    private Path getSourceDirDestinationPath(File file) {
-        return getZipFileDestinationFile(file).toPath().getParent().resolve(//
-                "tmp".concat(getZipFileDestinationFile(file).toPath().getFileName().toString()));
-    }
+    protected static class Utils {
 
-    private File getZipFileDestinationFile(File file) {
-        return file.getParentFile().toPath().resolve(//
-                Paths.get(file.getName().replaceFirst("[.][^.]+$", ""))).toFile();
-    }
-
-    private void createATempFolderToCompressFilesFrom(Path sourceDir, List<File> files) throws IOException {
-        if (!sourceDir.toFile().mkdir())
-            throw new IOException();
-        for (File file : files) {
-            copyTo(file, new File(sourceDir.toString().concat("/").concat(file.getName())));
+        public static Path getSourceDirDestinationPath(File file) {
+            return getZipFileDestinationFile(file).toPath().getParent().resolve(//
+                    "tmp".concat(getZipFileDestinationFile(file).toPath().getFileName().toString()));
         }
-    }
 
-    private void copyTo(File source, File destination) throws IOException {
-        if (source.isFile())
-            copyFile(source, destination);
-        else
-            copyFolder(source, destination);
-    }
+        public static File getZipFileDestinationFile(File file) {
+            return file.getParentFile().toPath().resolve(//
+                    Paths.get(file.getName().replaceFirst("[.][^.]+$", ""))).toFile();
+        }
 
-    private void copyFolder(File source, File destination) throws IOException {
-        if (!destination.mkdir())
-            throw new IOException();
-        for (String file : Objects.requireNonNull(source.list())) {
-            if (new File(source.getPath().concat("/").concat(file)).isFile())
-                copyFile(//
-                        new File(source.getPath().concat("/").concat(file))//
-                        , new File(destination.getPath().concat("/").concat(file)));
+        public static void createATempFolderToCompressFilesFrom(Path sourceDir, List<File> files) throws IOException {
+            if (!sourceDir.toFile().mkdir())
+                throw new IOException();
+            for (File file : files) {
+                copyTo(file, new File(sourceDir.toString().concat("/").concat(file.getName())));
+            }
+        }
+
+        public static void copyTo(File source, File destination) throws IOException {
+            if (source.isFile())
+                copyFile(source, destination);
             else
-                copyFolder(//
-                        new File(source.getPath().concat("/").concat(file))//
-                        , new File(destination.getPath().concat("/").concat(file)));
-        }
-    }
-
-
-    private void copyFile(File source, File destination) throws IOException {
-        if (!destination.createNewFile())
-            throw new IOException();
-        InputStream is = new FileInputStream(source);
-        OutputStream os = new FileOutputStream(destination);
-        writeFromInputStreamToOutputStream(is, os);
-    }
-
-    private void delete(Path file) throws IOException {
-        Files.walk(file)
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(java.io.File::delete);
-    }
-
-    private void writeFromInputStreamToOutputStream(InputStream is, OutputStream os) throws IOException {
-        byte[] buffer = new byte[1024];
-        int length;
-        while ((length = is.read(buffer)) > 0) {
-            os.write(buffer, 0, length);
+                copyFolder(source, destination);
         }
 
-        is.close();
-        os.close();
+        public static void copyFolder(File source, File destination) throws IOException {
+            if (!destination.mkdir())
+                throw new IOException();
+            for (String file : Objects.requireNonNull(source.list())) {
+                if (new File(source.getPath().concat("/").concat(file)).isFile())
+                    copyFile(//
+                            new File(source.getPath().concat("/").concat(file))//
+                            , new File(destination.getPath().concat("/").concat(file)));
+                else
+                    copyFolder(//
+                            new File(source.getPath().concat("/").concat(file))//
+                            , new File(destination.getPath().concat("/").concat(file)));
+            }
+        }
+
+
+        public static void copyFile(File source, File destination) throws IOException {
+            if (!destination.createNewFile())
+                throw new IOException();
+            InputStream is = new FileInputStream(source);
+            OutputStream os = new FileOutputStream(destination);
+            writeFromInputStreamToOutputStream(is, os);
+        }
+
+        public static void delete(Path file) throws IOException {
+            Files.walk(file)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(java.io.File::delete);
+        }
+
+        public static void writeFromInputStreamToOutputStream(InputStream is, OutputStream os) throws IOException {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = is.read(buffer)) > 0) {
+                os.write(buffer, 0, length);
+            }
+
+            is.close();
+            os.close();
+        }
+
     }
 
 }
